@@ -9,10 +9,10 @@ namespace unity_ecs_summarizer
     {
         public const string Id = "unity_ecs_summarizer.4d5ab4aa-cebc-4b86-9793-91242b983e76";
         public const string Name = "Unity ECS Summarizer";
-        public const string Description = @"Creates EntityQuery and ComponentSet summaries that contain components in the query or script.C";
+        public const string Description = @"Creates EntityQuery and ComponentTypeSet summaries that components in the query or the set.";
         public const string Language = "en-US";
         public const string Version = "1.0";
-        public const string Author = "Lar Kunc";
-        public const string Tags = "";
+        public const string Author = "larchman01";
+        public const string Tags = "unity ecs, unity dots, c#, summary, summarizer, unity, unity3d, ecs, dots";
     }
 }

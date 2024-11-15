@@ -23,9 +23,11 @@ namespace unity_ecs_summarizer
     /// </summary>
     internal sealed partial class PackageIds
     {
-        public const int MyMenuGroup = 0x0001;
-        public const int MyCodeWindowGroup = 0x0002;
-        public const int MyCommand = 0x0100;
+        public const int EcsSummarizerMenuGroup = 0x0001;
+        public const int EcsSummarizerSubMenuGroup = 0x0002;
+        public const int EcsSummarizerMenu = 0x0100;
+        public const int SummarizeEntityQueries = 0x0101;
+        public const int SummarizeComponentTypeSets = 0x0110;
         public const int IDM_VS_CTXT_CODEWIN = 0x040D;
     }
 }
