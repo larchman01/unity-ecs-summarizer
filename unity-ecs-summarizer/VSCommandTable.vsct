@@ -8,7 +8,7 @@
 
 	<Commands package="unity_ecs_summarizer">
 		<Groups>
-			<Group guid="unity_ecs_summarizer" id="EcsSummarizerMenuGroup" priority="0x0600">
+			<Group guid="unity_ecs_summarizer" id="EcsSummarizerMenuGroup" priority="0x0100">
 				<Parent guid="VSMainMenu" id="Extensions" />
 			</Group>
 			<Group guid="unity_ecs_summarizer" id="EcsSummarizerMenuGroup" priority="0x0100">
