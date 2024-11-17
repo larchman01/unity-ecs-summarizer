@@ -43,7 +43,8 @@ namespace unity_ecs_summarizer
 
         private static string RemoveExistingXmlSummaries(string documentText)
         {
-            var xmlSummaryRegex = new Regex(@"(^\s*)/// <summary>\s*(/// (WithAll|WithNone|WithAny|WithAbsent|WithDisabled|WithPresent):.*?(\s*///.*?)*?)\s*/// </summary>\s*", RegexOptions.Singleline | RegexOptions.Multiline);
+            // Regex to match any XML summary for EntityQuery variables
+            var xmlSummaryRegex = new Regex(@"(^\s*)/// <summary>.*?/// </summary>\s*", RegexOptions.Singleline | RegexOptions.Multiline);
             return xmlSummaryRegex.Replace(documentText, match => match.Groups[1].Value);
         }
 
@@ -53,9 +54,9 @@ namespace unity_ecs_summarizer
             return entityQueryRegex.Matches(documentText);
         }
 
-        private static Dictionary<string, (string Declaration, int StartIndex, List<string> WithAll, List<string> WithNone, List<string> WithAny, List<string> WithAbsent, List<string> WithDisabled, List<string> WithPresent, string Indentation)> ExtractQueryDetails(string documentText, MatchCollection matches)
+        private static Dictionary<string, (string Declaration, int StartIndex, List<List<string>> WithAll, List<List<string>> WithAllChunkComponent, List<List<string>> WithAllChunkComponentRW, List<List<string>> WithAllRW, List<List<string>> WithAny, List<List<string>> WithAnyChunkComponent, List<List<string>> WithAnyChunkComponentRW, List<List<string>> WithAnyRW, List<List<string>> WithAspect, List<List<string>> WithDisabled, List<List<string>> WithDisabledRW, List<List<string>> WithNone, List<List<string>> WithNoneChunkComponent, List<List<string>> WithOptions, List<List<string>> WithPresent, List<List<string>> WithPresentChunkComponent, List<List<string>> WithPresentChunkComponentRW, List<List<string>> WithPresentRW, string Indentation, int QuerySegmentCount)> ExtractQueryDetails(string documentText, MatchCollection matches)
         {
-            Dictionary<string, (string Declaration, int StartIndex, List<string> WithAll, List<string> WithNone, List<string> WithAny, List<string> WithAbsent, List<string> WithDisabled, List<string> WithPresent, string Indentation)> queries = new();
+            var queries = new Dictionary<string, (string Declaration, int StartIndex, List<List<string>> WithAll, List<List<string>> WithAllChunkComponent, List<List<string>> WithAllChunkComponentRW, List<List<string>> WithAllRW, List<List<string>> WithAny, List<List<string>> WithAnyChunkComponent, List<List<string>> WithAnyChunkComponentRW, List<List<string>> WithAnyRW, List<List<string>> WithAspect, List<List<string>> WithDisabled, List<List<string>> WithDisabledRW, List<List<string>> WithNone, List<List<string>> WithNoneChunkComponent, List<List<string>> WithOptions, List<List<string>> WithPresent, List<List<string>> WithPresentChunkComponent, List<List<string>> WithPresentChunkComponentRW, List<List<string>> WithPresentRW, string Indentation, int QuerySegmentCount)>();
 
             foreach (Match match in matches)
             {
@@ -74,35 +75,130 @@ namespace unity_ecs_summarizer
                 {
                     string queryBody = assignMatch.Groups[1].Value;
 
-                    List<string> withAll = ExtractComponents(new Regex(@"\.WithAll<([^>]*)>"), queryBody);
-                    List<string> withNone = ExtractComponents(new Regex(@"\.WithNone<([^>]*)>"), queryBody);
-                    List<string> withAny = ExtractComponents(new Regex(@"\.WithAny<([^>]*)>"), queryBody);
-                    List<string> withAbsent = ExtractComponents(new Regex(@"\.WithAbsent<([^>]*)>"), queryBody);
-                    List<string> withDisabled = ExtractComponents(new Regex(@"\.WithDisabled<([^>]*)>"), queryBody);
-                    List<string> withPresent = ExtractComponents(new Regex(@"\.WithPresent<([^>]*)>"), queryBody);
+                    // Split the query body by .AddAdditionalQuery()
+                    var querySegments = Regex.Split(queryBody, @"\.AddAdditionalQuery\(\)\s*");
+                    int querySegmentCount = querySegments.Length;
 
-                    queries[queryName] = (fullDeclaration, declarationIndex, withAll, withNone, withAny, withAbsent, withDisabled, withPresent, indentation);
+                    var withAll = new List<List<string>>();
+                    var withAllChunkComponent = new List<List<string>>();
+                    var withAllChunkComponentRW = new List<List<string>>();
+                    var withAllRW = new List<List<string>>();
+                    var withAny = new List<List<string>>();
+                    var withAnyChunkComponent = new List<List<string>>();
+                    var withAnyChunkComponentRW = new List<List<string>>();
+                    var withAnyRW = new List<List<string>>();
+                    var withAspect = new List<List<string>>();
+                    var withDisabled = new List<List<string>>();
+                    var withDisabledRW = new List<List<string>>();
+                    var withNone = new List<List<string>>();
+                    var withNoneChunkComponent = new List<List<string>>();
+                    var withOptions = new List<List<string>>();
+                    var withPresent = new List<List<string>>();
+                    var withPresentChunkComponent = new List<List<string>>();
+                    var withPresentChunkComponentRW = new List<List<string>>();
+                    var withPresentRW = new List<List<string>>();
+
+                    foreach (var segment in querySegments)
+                    {
+                        withAll.Add(ExtractComponents(new Regex(@"\.WithAll<([^>]*)>"), segment));
+                        withAllChunkComponent.Add(ExtractComponents(new Regex(@"\.WithAllChunkComponent<([^>]*)>"), segment));
+                        withAllChunkComponentRW.Add(ExtractComponents(new Regex(@"\.WithAllChunkComponentRW<([^>]*)>"), segment));
+                        withAllRW.Add(ExtractComponents(new Regex(@"\.WithAllRW<([^>]*)>"), segment));
+                        withAny.Add(ExtractComponents(new Regex(@"\.WithAny<([^>]*)>"), segment));
+                        withAnyChunkComponent.Add(ExtractComponents(new Regex(@"\.WithAnyChunkComponent<([^>]*)>"), segment));
+                        withAnyChunkComponentRW.Add(ExtractComponents(new Regex(@"\.WithAnyChunkComponentRW<([^>]*)>"), segment));
+                        withAnyRW.Add(ExtractComponents(new Regex(@"\.WithAnyRW<([^>]*)>"), segment));
+                        withAspect.Add(ExtractComponents(new Regex(@"\.WithAspect<([^>]*)>"), segment));
+                        withDisabled.Add(ExtractComponents(new Regex(@"\.WithDisabled<([^>]*)>"), segment));
+                        withDisabledRW.Add(ExtractComponents(new Regex(@"\.WithDisabledRW<([^>]*)>"), segment));
+                        withNone.Add(ExtractComponents(new Regex(@"\.WithNone<([^>]*)>"), segment));
+                        withNoneChunkComponent.Add(ExtractComponents(new Regex(@"\.WithNoneChunkComponent<([^>]*)>"), segment));
+                        withOptions.Add(ExtractEntityQueryOptions(segment));
+                        withPresent.Add(ExtractComponents(new Regex(@"\.WithPresent<([^>]*)>"), segment));
+                        withPresentChunkComponent.Add(ExtractComponents(new Regex(@"\.WithPresentChunkComponent<([^>]*)>"), segment));
+                        withPresentChunkComponentRW.Add(ExtractComponents(new Regex(@"\.WithPresentChunkComponentRW<([^>]*)>"), segment));
+                        withPresentRW.Add(ExtractComponents(new Regex(@"\.WithPresentRW<([^>]*)>"), segment));
+                    }
+
+                    queries[queryName] = (fullDeclaration, declarationIndex, withAll, withAllChunkComponent, withAllChunkComponentRW, withAllRW, withAny, withAnyChunkComponent, withAnyChunkComponentRW, withAnyRW, withAspect, withDisabled, withDisabledRW, withNone, withNoneChunkComponent, withOptions, withPresent, withPresentChunkComponent, withPresentChunkComponentRW, withPresentRW, indentation, querySegmentCount);
                 }
             }
 
             return queries;
         }
 
-        private static string GenerateXmlSummaries(string documentText, Dictionary<string, (string Declaration, int StartIndex, List<string> WithAll, List<string> WithNone, List<string> WithAny, List<string> WithAbsent, List<string> WithDisabled, List<string> WithPresent, string Indentation)> queries)
+        private static List<string> ExtractEntityQueryOptions(string queryBody)
+        {
+            var optionsRegex = new Regex(@"\.WithOptions\(\s*EntityQueryOptions\.([^)]+)\)");
+            return optionsRegex.Matches(queryBody)
+                .Cast<Match>()
+                .Select(m => m.Groups[1].Value.Trim())
+                .ToList();
+        }
+
+        private static string GenerateXmlSummaries(string documentText, Dictionary<string, (string Declaration, int StartIndex, List<List<string>> WithAll, List<List<string>> WithAllChunkComponent, List<List<string>> WithAllChunkComponentRW, List<List<string>> WithAllRW, List<List<string>> WithAny, List<List<string>> WithAnyChunkComponent, List<List<string>> WithAnyChunkComponentRW, List<List<string>> WithAnyRW, List<List<string>> WithAspect, List<List<string>> WithDisabled, List<List<string>> WithDisabledRW, List<List<string>> WithNone, List<List<string>> WithNoneChunkComponent, List<List<string>> WithOptions, List<List<string>> WithPresent, List<List<string>> WithPresentChunkComponent, List<List<string>> WithPresentChunkComponentRW, List<List<string>> WithPresentRW, string Indentation, int QuerySegmentCount)> queries)
         {
             var newDocumentText = documentText;
             foreach (var query in queries.OrderByDescending(q => q.Value.StartIndex))
             {
-                var (declaration, startIndex, withAll, withNone, withAny, withAbsent, withDisabled, withPresent, indentation) = query.Value;
+                var (declaration, startIndex, withAll, withAllChunkComponent, withAllChunkComponentRW, withAllRW, withAny, withAnyChunkComponent, withAnyChunkComponentRW, withAnyRW, withAspect, withDisabled, withDisabledRW, withNone, withNoneChunkComponent, withOptions, withPresent, withPresentChunkComponent, withPresentChunkComponentRW, withPresentRW, indentation, querySegmentCount) = query.Value;
 
                 var summaryBuilder = new System.Text.StringBuilder();
                 summaryBuilder.AppendLine($"{indentation}/// <summary>");
-                AppendComponentList(summaryBuilder, indentation, "WithAll", withAll);
-                AppendComponentList(summaryBuilder, indentation, "WithNone", withNone);
-                AppendComponentList(summaryBuilder, indentation, "WithAny", withAny);
-                AppendComponentList(summaryBuilder, indentation, "WithAbsent", withAbsent);
-                AppendComponentList(summaryBuilder, indentation, "WithDisabled", withDisabled);
-                AppendComponentList(summaryBuilder, indentation, "WithPresent", withPresent);
+
+                // Check if there are multiple queries
+                bool hasMultipleQueries = querySegmentCount > 1;
+
+                for (int i = 0; i < querySegmentCount; i++)
+                {
+                    // Add "Query X" label only if there are multiple queries
+                    if (hasMultipleQueries)
+                    {
+                        // For the first query, just add the label with indentation
+                        if (i == 0)
+                        {
+                            summaryBuilder.AppendLine($"{indentation}/// Query {i + 1}: <br />");
+                        }
+                        // For subsequent queries, add <br /> before the label on the same line
+                        else
+                        {
+                            summaryBuilder.AppendLine($"{indentation}/// <br /> Query {i + 1}: <br />");
+                        }
+                    }
+
+                    var types = new List<(string Clause, List<string> Components)>
+                    {
+                        ("WithAll", withAll[i]),
+                        ("WithAllChunkComponent", withAllChunkComponent[i]),
+                        ("WithAllChunkComponentRW", withAllChunkComponentRW[i]),
+                        ("WithAllRW", withAllRW[i]),
+                        ("WithAny", withAny[i]),
+                        ("WithAnyChunkComponent", withAnyChunkComponent[i]),
+                        ("WithAnyChunkComponentRW", withAnyChunkComponentRW[i]),
+                        ("WithAnyRW", withAnyRW[i]),
+                        ("WithAspect", withAspect[i]),
+                        ("WithDisabled", withDisabled[i]),
+                        ("WithDisabledRW", withDisabledRW[i]),
+                        ("WithNone", withNone[i]),
+                        ("WithNoneChunkComponent", withNoneChunkComponent[i]),
+                        ("WithOptions", withOptions[i]),
+                        ("WithPresent", withPresent[i]),
+                        ("WithPresentChunkComponent", withPresentChunkComponent[i]),
+                        ("WithPresentChunkComponentRW", withPresentChunkComponentRW[i]),
+                        ("WithPresentRW", withPresentRW[i])
+                    };
+
+                    // Remove types with no components
+                    types = types.Where(t => t.Components.Any()).ToList();
+
+                    // Append each type, passing whether it's the last type in the query
+                    for (int j = 0; j < types.Count; j++)
+                    {
+                        bool isLastTypeInQuery = (j == types.Count - 1);
+                        AppendComponentList(summaryBuilder, indentation, types[j].Clause, types[j].Components, isLastTypeInQuery);
+                    }
+                }
+
                 summaryBuilder.AppendLine($"{indentation}/// </summary>");
 
                 int lineStartIndex = newDocumentText.LastIndexOf('\n', startIndex) + 1;
@@ -127,11 +223,31 @@ namespace unity_ecs_summarizer
                 .ToList();
         }
 
-        private static void AppendComponentList(System.Text.StringBuilder builder, string indentation, string clause, List<string> components)
+        private static void AppendComponentList(System.Text.StringBuilder builder, string indentation, string clause, List<string> components, bool isLastTypeInQuery)
         {
             if (components.Any())
             {
-                builder.AppendLine($"{indentation}/// {clause}: {string.Join(", ", components.Select(c => $"<see cref=\"{c}\" />"))} <br />");
+                string componentList;
+                if (clause == "WithOptions")
+                {
+                    // Format WithOptions as "WithOptions: <see cref="EntityQueryOptions.Default" />"
+                    componentList = $"WithOptions: {string.Join(", ", components.Select(c => $"<see cref=\"EntityQueryOptions.{c}\" />"))}";
+                }
+                else
+                {
+                    // Format other types as "<Clause>: <see cref="Component" />"
+                    componentList = $"{clause}: {string.Join(", ", components.Select(c => $"<see cref=\"{c}\" />"))}";
+                }
+
+                builder.Append($"{indentation}/// {componentList}");
+
+                // Add <br /> unless it's the last type in the query
+                if (!isLastTypeInQuery)
+                {
+                    builder.Append(" <br />");
+                }
+
+                builder.AppendLine(); // Move to the next line
             }
         }
     }
