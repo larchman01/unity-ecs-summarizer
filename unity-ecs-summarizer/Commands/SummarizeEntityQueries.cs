@@ -15,7 +15,7 @@ namespace unity_ecs_summarizer
             if (documentView == null) return;
 
             string documentText = documentView.TextBuffer.CurrentSnapshot.GetText();
-            documentText = RemoveExistingXmlSummaries(documentText);
+            documentText = RemoveExistingEntityQuerySummaries(documentText);
 
             var entityQueries = FindEntityQueries(documentText);
             if (entityQueries.Count == 0)
@@ -41,11 +41,46 @@ namespace unity_ecs_summarizer
             return documentView;
         }
 
-        private static string RemoveExistingXmlSummaries(string documentText)
+        private static string RemoveExistingEntityQuerySummaries(string documentText)
         {
             // Regex to match any XML summary for EntityQuery variables
-            var xmlSummaryRegex = new Regex(@"(^\s*)/// <summary>.*?/// </summary>\s*", RegexOptions.Singleline | RegexOptions.Multiline);
-            return xmlSummaryRegex.Replace(documentText, match => match.Groups[1].Value);
+            var xmlSummaryRegex = new Regex(@"(^\s*)/// <summary>(.*?)/// </summary>\s*", RegexOptions.Singleline | RegexOptions.Multiline);
+
+            // List of keywords to check for in the summary content
+            var keywords = new[]
+            {
+                "WithAll",
+                "WithAllChunkComponent",
+                "WithAllChunkComponentRW",
+                "WithAllRW",
+                "WithAny",
+                "WithAnyChunkComponent",
+                "WithAnyChunkComponentRW",
+                "WithAnyRW",
+                "WithAspect",
+                "WithDisabled",
+                "WithDisabledRW",
+                "WithNone",
+                "WithNoneChunkComponent",
+                "WithOptions",
+                "WithPresent",
+                "WithPresentChunkComponent",
+                "WithPresentChunkComponentRW",
+                "WithPresentRW"
+            };
+
+            return xmlSummaryRegex.Replace(documentText, match =>
+            {
+                // Check if the summary content contains any of the specified keywords
+                if (keywords.Any(keyword => match.Groups[2].Value.Contains(keyword)))
+                {
+                    // If it does, remove the summary by returning only the leading whitespace
+                    return match.Groups[1].Value;
+                }
+
+                // Otherwise, return the original match (do not remove the summary)
+                return match.Value;
+            });
         }
 
         private static MatchCollection FindEntityQueries(string documentText)

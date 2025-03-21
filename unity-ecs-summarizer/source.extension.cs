@@ -11,7 +11,7 @@ namespace unity_ecs_summarizer
         public const string Name = "Unity ECS Summarizer";
         public const string Description = @"Creates EntityQuery and ComponentTypeSet summaries of the components in the query or the set.";
         public const string Language = "en-US";
-        public const string Version = "1.2";
+        public const string Version = "1.3.1";
         public const string Author = "larchman01";
         public const string Tags = "unity ecs, unity dots, c#, summary, summarizer, unity, unity3d, ecs, dots";
     }
